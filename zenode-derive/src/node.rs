@@ -331,11 +331,22 @@ fn field_param_kind(
             let kind = quote! { ::zenode::ParamKind::Bool { default: #default } };
             Ok((kind, "Bool", default, None))
         }
+        "String" => {
+            let default_lit = attrs.default.as_ref().map(|e| quote!(#e)).unwrap_or(quote!(""));
+            let kind = quote! { ::zenode::ParamKind::Str { default: #default_lit } };
+            let default_expr = attrs.default.as_ref()
+                .map(|e| quote!(::zenode::__private::String::from(#e)))
+                .unwrap_or_else(|| quote!(::zenode::__private::String::new()));
+            Ok((kind, "Str", default_expr, None))
+        }
         _ => {
-            // Default: treat as string
-            let default = attrs.default.as_ref().map(|e| quote!(#e)).unwrap_or(quote!(""));
-            let kind = quote! { ::zenode::ParamKind::Str { default: #default } };
-            Ok((kind, "Str", quote!(::zenode::__private::String::new()), None))
+            // Unknown type: treat as string
+            let default_lit = attrs.default.as_ref().map(|e| quote!(#e)).unwrap_or(quote!(""));
+            let kind = quote! { ::zenode::ParamKind::Str { default: #default_lit } };
+            let default_expr = attrs.default.as_ref()
+                .map(|e| quote!(::zenode::__private::String::from(#e)))
+                .unwrap_or_else(|| quote!(::zenode::__private::String::new()));
+            Ok((kind, "Str", default_expr, None))
         }
     }
 }
@@ -422,7 +433,8 @@ fn gen_from_kv(
         "i32" => quote! { take_i32 },
         "u32" => quote! { take_u32 },
         "bool" => quote! { take_bool },
-        _ => quote! { take },
+        "String" => quote! { take_owned },
+        _ => quote! { take_owned },
     };
 
     let first_key = &kv_keys[0];

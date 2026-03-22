@@ -34,6 +34,9 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+// Allow the derive macro (which emits `::zenode::`) to work inside this crate.
+extern crate self as zenode;
+
 pub mod error;
 pub mod format;
 pub mod kv;
@@ -43,6 +46,9 @@ pub mod registry;
 pub mod schema;
 pub mod traits;
 pub mod version;
+
+#[cfg(feature = "derive")]
+pub mod nodes;
 
 #[cfg(feature = "serde")]
 pub mod serde_impl;
