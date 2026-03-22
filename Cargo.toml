@@ -1,0 +1,3 @@
+[workspace]
+members = ["zenode", "zenode-derive"]
+resolver = "3"
