@@ -7,7 +7,7 @@ use zenode::*;
 /// Exposure adjustment in photographic stops.
 /// Each stop doubles or halves brightness.
 #[derive(Node, Clone, Debug, Default)]
-#[node(id = "test.exposure", group = Tone, phase = DisplayAdjust)]
+#[node(id = "test.exposure", group = Tone, role = Filter)]
 #[node(coalesce = "fused_adjust")]
 #[node(format(preferred = OklabF32, alpha = Skip))]
 #[node(tags("basic", "tone"))]
@@ -21,7 +21,7 @@ pub struct Exposure {
 
 /// Resize to specified dimensions.
 #[derive(Node, Clone, Debug, Default)]
-#[node(id = "test.resize", group = Geometry, phase = Resize)]
+#[node(id = "test.resize", group = Geometry, role = Geometry)]
 #[node(changes_dimensions)]
 #[node(format(preferred = LinearF32, alpha = RequirePremul))]
 pub struct Resize {
@@ -50,7 +50,7 @@ fn schema_metadata() {
     assert_eq!(schema.id, "test.exposure");
     assert_eq!(schema.label, "Exposure");
     assert_eq!(schema.group, NodeGroup::Tone);
-    assert_eq!(schema.phase, Phase::DisplayAdjust);
+    assert_eq!(schema.role, NodeRole::Filter);
     assert_eq!(schema.version, 1);
     assert_eq!(schema.tags, &["basic", "tone"]);
     assert!(schema.coalesce.is_some());
@@ -233,7 +233,7 @@ fn registry_warns_unrecognized_keys() {
 
 /// HSL-style per-hue adjustment with [f32; 8] array fields.
 #[derive(Node, Clone, Debug)]
-#[node(id = "test.hsl_adjust", group = Color, phase = DisplayAdjust)]
+#[node(id = "test.hsl_adjust", group = Color, role = Filter)]
 #[node(format(preferred = OklabF32, alpha = Skip))]
 pub struct HslAdjust {
     /// Per-hue hue shift
@@ -263,7 +263,7 @@ pub struct HslAdjust {
 
 /// B&W mixer weights.
 #[derive(Node, Clone, Debug)]
-#[node(id = "test.bw_mixer", group = Color, phase = DisplayAdjust)]
+#[node(id = "test.bw_mixer", group = Color, role = Filter)]
 #[node(format(preferred = OklabF32, alpha = Skip))]
 pub struct BwMixer {
     /// Per-hue grayscale contribution weights
@@ -277,7 +277,7 @@ pub struct BwMixer {
 
 /// Minimal array node for targeted tests.
 #[derive(Node, Clone, Debug)]
-#[node(id = "test.array_node", group = Color, phase = DisplayAdjust)]
+#[node(id = "test.array_node", group = Color, role = Filter)]
 pub struct ArrayNode {
     /// Test array field
     #[param(range(-180.0..=180.0), default = 0.0, identity = 0.0)]

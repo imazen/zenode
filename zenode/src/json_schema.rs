@@ -28,7 +28,7 @@ pub fn node_to_json_schema(schema: &NodeSchema) -> Value {
         "additionalProperties": false,
         "x-zenode-id": schema.id,
         "x-zenode-group": serde_json::to_value(schema.group).unwrap_or(Value::Null),
-        "x-zenode-phase": serde_json::to_value(schema.phase).unwrap_or(Value::Null),
+        "x-zenode-role": serde_json::to_value(schema.role).unwrap_or(Value::Null),
         "x-zenode-version": schema.version,
         "x-zenode-compat-version": schema.compat_version,
     });

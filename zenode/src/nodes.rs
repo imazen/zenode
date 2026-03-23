@@ -19,7 +19,7 @@ use crate::*;
 /// Format detection is automatic (from magic bytes). The decode params
 /// control behavior that applies across all formats.
 #[derive(Node, Clone, Debug)]
-#[node(id = "zenode.decode", group = Decode, phase = Decode)]
+#[node(id = "zenode.decode", group = Decode, role = Decode)]
 #[node(tags("io", "decode"))]
 pub struct Decode {
     /// I/O slot identifier (assigned by the job builder).
@@ -85,7 +85,7 @@ impl Default for Decode {
 ///
 /// Matches imageflow's `EncoderPreset::Auto` for backwards compatibility.
 #[derive(Node, Clone, Debug)]
-#[node(id = "zenode.quality_intent", group = Encode, phase = Encode)]
+#[node(id = "zenode.quality_intent", group = Encode, role = Encode)]
 #[node(tags("quality", "auto", "format", "encode"))]
 pub struct QualityIntent {
     /// Quality profile: named preset or numeric 0-100.

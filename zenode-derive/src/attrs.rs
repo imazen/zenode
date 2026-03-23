@@ -9,7 +9,8 @@ pub struct NodeAttrs {
     pub id: Option<LitStr>,
     pub label: Option<LitStr>,
     pub group: Option<Ident>,
-    pub phase: Option<Ident>,
+    /// Accepts both `role = Filter` and `phase = Filter` (legacy alias).
+    pub role: Option<Ident>,
     pub version: Option<u32>,
     pub compat_version: Option<u32>,
     pub fusable: bool,
@@ -41,9 +42,9 @@ impl NodeAttrs {
                 } else if meta.path.is_ident("group") {
                     meta.input.parse::<Token![=]>()?;
                     result.group = Some(meta.input.parse::<Ident>()?);
-                } else if meta.path.is_ident("phase") {
+                } else if meta.path.is_ident("role") || meta.path.is_ident("phase") {
                     meta.input.parse::<Token![=]>()?;
-                    result.phase = Some(meta.input.parse::<Ident>()?);
+                    result.role = Some(meta.input.parse::<Ident>()?);
                 } else if meta.path.is_ident("version") {
                     meta.input.parse::<Token![=]>()?;
                     let lit = meta.input.parse::<LitInt>()?;

@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::format::{AlphaHandling, FormatHint, PixelFormatPreference};
-use crate::ordering::{CoalesceInfo, Phase};
+use crate::ordering::{CoalesceInfo, NodeRole};
 use crate::param::ParamValue;
 use crate::schema::{EnumVariant, NodeGroup, NodeSchema, ParamDesc, ParamKind, SliderMapping};
 
@@ -91,18 +91,14 @@ impl Serialize for NodeGroup {
     }
 }
 
-impl Serialize for Phase {
+impl Serialize for NodeRole {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(match self {
             Self::Decode => "decode",
-            Self::RawDevelop => "raw_develop",
-            Self::Orient => "orient",
-            Self::SceneLinear => "scene_linear",
-            Self::ToneMap => "tone_map",
-            Self::DisplayAdjust => "display_adjust",
-            Self::PreResize => "pre_resize",
-            Self::Resize => "resize",
-            Self::PostResize => "post_resize",
+            Self::Geometry => "geometry",
+            Self::Filter => "filter",
+            Self::Composite => "composite",
+            Self::Analysis => "analysis",
             Self::Quantize => "quantize",
             Self::Encode => "encode",
             _ => "other",
@@ -280,7 +276,7 @@ impl Serialize for NodeSchema {
         s.serialize_field("label", &self.label)?;
         s.serialize_field("description", &self.description)?;
         s.serialize_field("group", &self.group)?;
-        s.serialize_field("phase", &self.phase)?;
+        s.serialize_field("role", &self.role)?;
         s.serialize_field("params", &self.params)?;
         s.serialize_field("tags", &self.tags)?;
         s.serialize_field("coalesce", &self.coalesce)?;

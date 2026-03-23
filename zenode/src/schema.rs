@@ -4,7 +4,7 @@
 //! statics/consts with zero heap allocation.
 
 use crate::format::FormatHint;
-use crate::ordering::{CoalesceInfo, Phase};
+use crate::ordering::{CoalesceInfo, NodeRole};
 
 /// Complete static schema for one node type.
 pub struct NodeSchema {
@@ -22,8 +22,12 @@ pub struct NodeSchema {
     /// UI grouping category.
     pub group: NodeGroup,
 
-    /// Pipeline processing phase.
-    pub phase: Phase,
+    /// What role this node plays in the pipeline.
+    ///
+    /// Used by the bridge to collect compatible node runs and feed them
+    /// to the appropriate planner. NOT a sort key — user ordering is
+    /// always preserved.
+    pub role: NodeRole,
 
     /// Parameter descriptors in display order.
     pub params: &'static [ParamDesc],

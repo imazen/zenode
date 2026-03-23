@@ -10,7 +10,7 @@ fn decode_schema() {
     let schema = DECODE_NODE.schema();
     assert_eq!(schema.id, "zenode.decode");
     assert_eq!(schema.group, NodeGroup::Decode);
-    assert_eq!(schema.phase, Phase::Decode);
+    assert_eq!(schema.role, NodeRole::Decode);
     let names: Vec<&str> = schema.params.iter().map(|p| p.name).collect();
     assert!(names.contains(&"io_id"));
     assert!(names.contains(&"hdr_mode"));
@@ -72,7 +72,7 @@ fn quality_intent_schema() {
     let schema = QUALITY_INTENT_NODE.schema();
     assert_eq!(schema.id, "zenode.quality_intent");
     assert_eq!(schema.group, NodeGroup::Encode);
-    assert_eq!(schema.phase, Phase::Encode);
+    assert_eq!(schema.role, NodeRole::Encode);
     assert!(schema.tags.contains(&"quality"));
     assert!(schema.tags.contains(&"auto"));
 

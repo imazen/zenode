@@ -10,7 +10,7 @@
 //! use zenode::*;
 //!
 //! #[derive(Node, Clone, Debug, Default)]
-//! #[node(id = "myfilter.brightness", group = Tone, phase = DisplayAdjust)]
+//! #[node(id = "myfilter.brightness", group = Tone, role = Filter)]
 //! pub struct Brightness {
 //!     /// Amount of brightness adjustment
 //!     #[param(range(-1.0..=1.0), default = 0.0, identity = 0.0, step = 0.05)]
@@ -60,7 +60,9 @@ pub mod json_schema;
 pub use error::NodeError;
 pub use format::{AlphaHandling, FormatHint, PixelFormatPreference};
 pub use kv::{KvPairs, KvWarning, KvWarningKind};
-pub use ordering::{CoalesceInfo, Phase};
+pub use ordering::{CoalesceInfo, NodeRole};
+/// Backwards compatibility alias.
+pub type Phase = NodeRole;
 pub use param::{ParamMap, ParamValue};
 pub use registry::{KvResult, NodeRegistry};
 pub use schema::{EnumVariant, NodeGroup, NodeSchema, ParamDesc, ParamKind, SliderMapping};
