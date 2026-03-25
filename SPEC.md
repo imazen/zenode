@@ -296,7 +296,7 @@ Has `to_codec_intent()` → `CodecIntent` for resolution via zencodecs' selectio
 | `derive` | Yes | `#[derive(Node)]` and `#[derive(NodeEnum)]` |
 | `std` | Yes | `std::error::Error` impl |
 | `serde` | No | Serialize/Deserialize for param types, schema export |
-| `json-schema` | No | JSON Schema + OpenAPI generation (implies `serde`) |
+| `json-schema` | No | JSON Schema + OpenAPI generation (implies `serde`); note: no `dep:` entry — this feature only re-enables serde, no separate json-schema crate dependency |
 
 ## Serde Behavior (feature `serde`)
 
@@ -327,7 +327,7 @@ zennode itself only defines infrastructure + the `Decode` node. All other nodes 
 | zenbitmaps | `EncodeBmp` | `zennode` |
 | zenresize | `Constrain` | `zennode` |
 | zenlayout | `Crop`, `Orient`, `FlipH/V`, `Rotate*`, `ExpandCanvas`, `Constrain` | `zennode` |
-| zenfilters | 35 filter nodes | `zennode` |
+| zenfilters | 51 filter nodes | `zennode` |
 | zenblend | `Composite` + `BlendModeEnum` | `zennode` |
 | zenquant | `Quantize` | `zennode` |
 
