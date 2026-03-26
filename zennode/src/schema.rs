@@ -46,6 +46,16 @@ pub struct NodeSchema {
 
     /// Oldest version this schema can deserialize from.
     pub compat_version: u32,
+
+    /// JSON key for whole-node serialization: `{"constrain": {...params...}}`.
+    ///
+    /// Empty string means use the `id`. Set via `#[node(json_key = "constrain")]`.
+    pub json_key: &'static str,
+
+    /// Whether to reject unknown fields during JSON deserialization.
+    ///
+    /// Set via `#[node(deny_unknown_fields)]`.
+    pub deny_unknown_fields: bool,
 }
 
 impl NodeSchema {
@@ -54,6 +64,17 @@ impl NodeSchema {
     /// [`Phase`](crate::Phase) is a type alias for [`NodeRole`].
     pub fn phase(&self) -> NodeRole {
         self.role
+    }
+
+    /// Effective JSON key for whole-node serialization.
+    ///
+    /// Returns `json_key` if non-empty, otherwise `id`.
+    pub fn effective_json_key(&self) -> &'static str {
+        if self.json_key.is_empty() {
+            self.id
+        } else {
+            self.json_key
+        }
     }
 
     /// Render this schema as Markdown documentation.
@@ -141,9 +162,9 @@ impl NodeSchema {
                         .collect::<alloc::vec::Vec<_>>()
                         .join(", ")
                 };
-                let _ = write!(
+                let _ = writeln!(
                     md,
-                    "| `{}` | {} | {} | {} | {} | {} |\n",
+                    "| `{}` | {} | {} | {} | {} | {} |",
                     p.name,
                     ty,
                     default,
@@ -195,6 +216,37 @@ pub struct ParamDesc {
     /// Optional parameters map to `Option<T>` fields in the Rust struct.
     /// When `true`, UIs should distinguish "unset" from "set to default."
     pub optional: bool,
+
+    /// JSON field name override. Empty string means use [`name`](Self::name).
+    ///
+    /// Set via `#[param(json_name = "sharpen_percent")]`.
+    /// Use [`effective_json_name()`](Self::effective_json_name) to get the resolved name.
+    pub json_name: &'static str,
+
+    /// Additional JSON field names accepted during deserialization.
+    ///
+    /// Set via `#[param(json_alias = "old_name")]`.
+    pub json_aliases: &'static [&'static str],
+}
+
+impl ParamDesc {
+    /// Effective JSON field name: `json_name` if non-empty, else `name`.
+    pub fn effective_json_name(&self) -> &'static str {
+        if self.json_name.is_empty() {
+            self.name
+        } else {
+            self.json_name
+        }
+    }
+
+    /// Whether a given JSON key matches this parameter (by name or alias).
+    pub fn matches_json_key(&self, key: &str) -> bool {
+        let eff = self.effective_json_name();
+        if key == eff || key == self.name {
+            return true;
+        }
+        self.json_aliases.contains(&key)
+    }
 }
 
 /// Parameter type, range, and default value.

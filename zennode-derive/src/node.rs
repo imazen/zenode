@@ -45,6 +45,12 @@ fn derive_node_inner(input: &DeriveInput) -> syn::Result<TokenStream2> {
 
     let version = node_attrs.version.unwrap_or(1);
     let compat_version = node_attrs.compat_version.unwrap_or(1);
+    let json_key_str = node_attrs
+        .json_key
+        .as_ref()
+        .map(|l| l.value())
+        .unwrap_or_default();
+    let deny_unknown = node_attrs.deny_unknown_fields;
 
     // Extract named fields
     let fields = match &input.data {
@@ -120,6 +126,18 @@ fn derive_node_inner(input: &DeriveInput) -> syn::Result<TokenStream2> {
         let default_expr = &fk.default_expr;
         let is_optional = fk.is_optional;
 
+        let json_name_str = param_attrs
+            .json_name
+            .as_ref()
+            .map(|l| l.value())
+            .unwrap_or_default();
+        let json_aliases: Vec<_> = param_attrs.json_aliases.iter().collect();
+        let json_aliases_tokens = if json_aliases.is_empty() {
+            quote! { &[] }
+        } else {
+            quote! { &[#(#json_aliases),*] }
+        };
+
         param_desc_tokens.push(quote! {
             ::zennode::ParamDesc {
                 name: #field_name_str,
@@ -133,6 +151,8 @@ fn derive_node_inner(input: &DeriveInput) -> syn::Result<TokenStream2> {
                 since_version: #since,
                 visible_when: #visible_when,
                 optional: #is_optional,
+                json_name: #json_name_str,
+                json_aliases: #json_aliases_tokens,
             }
         });
 
@@ -259,6 +279,8 @@ fn derive_node_inner(input: &DeriveInput) -> syn::Result<TokenStream2> {
             format: #format_tokens,
             version: #version,
             compat_version: #compat_version,
+            json_key: #json_key_str,
+            deny_unknown_fields: #deny_unknown,
         };
 
         /// Node definition (factory) for [`#struct_name`].

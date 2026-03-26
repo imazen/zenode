@@ -276,7 +276,7 @@ impl Serialize for EnumVariant {
 impl Serialize for ParamDesc {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeStruct;
-        let mut s = serializer.serialize_struct("ParamDesc", 11)?;
+        let mut s = serializer.serialize_struct("ParamDesc", 13)?;
         s.serialize_field("name", &self.name)?;
         s.serialize_field("label", &self.label)?;
         s.serialize_field("description", &self.description)?;
@@ -288,6 +288,10 @@ impl Serialize for ParamDesc {
         s.serialize_field("since_version", &self.since_version)?;
         s.serialize_field("visible_when", &self.visible_when)?;
         s.serialize_field("optional", &self.optional)?;
+        s.serialize_field("json_name", &self.effective_json_name())?;
+        if !self.json_aliases.is_empty() {
+            s.serialize_field("json_aliases", &self.json_aliases)?;
+        }
         s.end()
     }
 }
@@ -295,7 +299,7 @@ impl Serialize for ParamDesc {
 impl Serialize for NodeSchema {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeStruct;
-        let mut s = serializer.serialize_struct("NodeSchema", 12)?;
+        let mut s = serializer.serialize_struct("NodeSchema", 14)?;
         s.serialize_field("id", &self.id)?;
         s.serialize_field("label", &self.label)?;
         s.serialize_field("description", &self.description)?;
@@ -307,6 +311,8 @@ impl Serialize for NodeSchema {
         s.serialize_field("format", &self.format)?;
         s.serialize_field("version", &self.version)?;
         s.serialize_field("compat_version", &self.compat_version)?;
+        s.serialize_field("json_key", &self.effective_json_key())?;
+        s.serialize_field("deny_unknown_fields", &self.deny_unknown_fields)?;
         s.end()
     }
 }

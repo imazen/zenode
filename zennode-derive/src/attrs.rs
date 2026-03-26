@@ -21,6 +21,8 @@ pub struct NodeAttrs {
     pub preferred_format: Option<Ident>,
     pub alpha_handling: Option<Ident>,
     pub tags: Vec<LitStr>,
+    pub json_key: Option<LitStr>,
+    pub deny_unknown_fields: bool,
 }
 
 impl NodeAttrs {
@@ -79,6 +81,11 @@ impl NodeAttrs {
                         }
                         let _ = content.parse::<Token![,]>();
                     }
+                } else if meta.path.is_ident("json_key") {
+                    meta.input.parse::<Token![=]>()?;
+                    result.json_key = Some(meta.input.parse::<LitStr>()?);
+                } else if meta.path.is_ident("deny_unknown_fields") {
+                    result.deny_unknown_fields = true;
                 } else if meta.path.is_ident("tags") {
                     let content;
                     syn::parenthesized!(content in meta.input);
@@ -117,6 +124,10 @@ pub struct ParamAttrs {
     pub json_schema: Option<LitStr>,
     /// Raw JSON default value string.
     pub json_default: Option<LitStr>,
+    /// JSON field name override.
+    pub json_name: Option<LitStr>,
+    /// Additional JSON field name aliases.
+    pub json_aliases: Vec<LitStr>,
     pub kv_keys: Vec<LitStr>,
 }
 
@@ -180,6 +191,12 @@ impl ParamAttrs {
                     } else if meta.path.is_ident("json_default") {
                         meta.input.parse::<Token![=]>()?;
                         result.json_default = Some(meta.input.parse::<LitStr>()?);
+                    } else if meta.path.is_ident("json_name") {
+                        meta.input.parse::<Token![=]>()?;
+                        result.json_name = Some(meta.input.parse::<LitStr>()?);
+                    } else if meta.path.is_ident("json_alias") {
+                        meta.input.parse::<Token![=]>()?;
+                        result.json_aliases.push(meta.input.parse::<LitStr>()?);
                     } else {
                         return Err(meta.error("unknown param attribute"));
                     }

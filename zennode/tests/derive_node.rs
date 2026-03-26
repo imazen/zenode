@@ -809,3 +809,346 @@ fn json_param_kv_skips_json_fields() {
     assert_eq!(node.get_param("hints"), Some(ParamValue::None));
     assert_eq!(node.get_param("gravity"), Some(ParamValue::None));
 }
+
+// ─── Whole-node serde tests ───
+
+/// Node with json_key, json_name, json_alias, deny_unknown_fields.
+#[derive(Node, Clone, Debug, Default)]
+#[node(id = "test.imageflow_constrain", group = Layout, role = Resize)]
+#[node(json_key = "constrain", deny_unknown_fields)]
+#[node(changes_dimensions)]
+pub struct ImageflowConstrain {
+    /// Target width.
+    #[param(range(0..=65535), default = 0)]
+    pub w: Option<u32>,
+
+    /// Target height.
+    #[param(range(0..=65535), default = 0)]
+    pub h: Option<u32>,
+
+    /// Constraint mode.
+    #[param(default = "within")]
+    pub mode: String,
+
+    /// Sharpening (renamed for imageflow compat).
+    #[param(range(0.0..=100.0), default = 0.0, step = 1.0)]
+    #[param(json_name = "sharpen_percent")]
+    #[param(json_alias = "sharpen_pct")]
+    pub sharpen: Option<f32>,
+
+    /// Resample hints (nested object).
+    #[param(
+        json_schema = r#"{"type":"object","properties":{"down_filter":{"type":"string"},"up_filter":{"type":"string"}}}"#
+    )]
+    pub hints: Option<Hints>,
+}
+
+#[test]
+fn json_key_in_schema() {
+    let schema = IMAGEFLOW_CONSTRAIN_NODE.schema();
+    assert_eq!(schema.json_key, "constrain");
+    assert_eq!(schema.effective_json_key(), "constrain");
+    assert!(schema.deny_unknown_fields);
+}
+
+#[test]
+fn json_name_in_param_desc() {
+    let schema = IMAGEFLOW_CONSTRAIN_NODE.schema();
+    let sharpen = schema.params.iter().find(|p| p.name == "sharpen").unwrap();
+    assert_eq!(sharpen.json_name, "sharpen_percent");
+    assert_eq!(sharpen.effective_json_name(), "sharpen_percent");
+    assert!(sharpen.json_aliases.contains(&"sharpen_pct"));
+    assert!(sharpen.matches_json_key("sharpen_percent"));
+    assert!(sharpen.matches_json_key("sharpen_pct"));
+    assert!(sharpen.matches_json_key("sharpen")); // field name also works
+    assert!(!sharpen.matches_json_key("sharpness"));
+}
+
+#[test]
+fn json_key_empty_defaults_to_id() {
+    let schema = EXPOSURE_NODE.schema();
+    assert_eq!(schema.json_key, "");
+    assert_eq!(schema.effective_json_key(), "test.exposure");
+}
+
+#[test]
+fn whole_node_from_json() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+
+    let json: serde_json::Value = serde_json::json!({
+        "constrain": {
+            "mode": "fit_crop",
+            "w": 800,
+            "h": 600,
+            "sharpen_percent": 15.0
+        }
+    });
+
+    let node = registry.node_from_json(&json).unwrap();
+    assert_eq!(node.schema().id, "test.imageflow_constrain");
+    assert_eq!(node.get_param("w"), Some(ParamValue::U32(800)));
+    assert_eq!(node.get_param("h"), Some(ParamValue::U32(600)));
+    assert_eq!(
+        node.get_param("mode"),
+        Some(ParamValue::Str("fit_crop".into()))
+    );
+    assert_eq!(node.get_param("sharpen"), Some(ParamValue::F32(15.0)));
+}
+
+#[test]
+fn whole_node_from_json_with_alias() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+
+    // Use the alias "sharpen_pct" instead of "sharpen_percent"
+    let json: serde_json::Value = serde_json::json!({
+        "constrain": {
+            "w": 400,
+            "sharpen_pct": 20.0
+        }
+    });
+
+    let node = registry.node_from_json(&json).unwrap();
+    assert_eq!(node.get_param("sharpen"), Some(ParamValue::F32(20.0)));
+}
+
+#[test]
+fn whole_node_from_json_with_nested_json_param() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+
+    let json: serde_json::Value = serde_json::json!({
+        "constrain": {
+            "w": 800,
+            "hints": {
+                "down_filter": "lanczos",
+                "up_filter": "ginseng"
+            }
+        }
+    });
+
+    let node = registry.node_from_json(&json).unwrap();
+    let c = node.as_any().downcast_ref::<ImageflowConstrain>().unwrap();
+    assert_eq!(c.w, Some(800));
+    let hints = c.hints.as_ref().unwrap();
+    assert_eq!(hints.down_filter.as_deref(), Some("lanczos"));
+    assert_eq!(hints.up_filter.as_deref(), Some("ginseng"));
+}
+
+#[test]
+fn whole_node_to_json_skips_none() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+
+    let node = ImageflowConstrain {
+        w: Some(800),
+        h: None,
+        mode: String::from("fit"),
+        sharpen: None,
+        hints: None,
+    };
+
+    let json = registry.node_to_json(&node);
+    let inner = json.get("constrain").unwrap();
+
+    // w is present
+    assert_eq!(inner.get("w").unwrap(), 800);
+    // mode is present (non-optional, always serialized)
+    assert_eq!(inner.get("mode").unwrap(), "fit");
+    // h, sharpen_percent, hints are absent (None → skipped)
+    assert!(inner.get("h").is_none());
+    assert!(inner.get("sharpen_percent").is_none());
+    assert!(inner.get("hints").is_none());
+}
+
+#[test]
+fn whole_node_to_json_uses_json_name() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+
+    let node = ImageflowConstrain {
+        w: Some(800),
+        h: None,
+        mode: String::from("fit"),
+        sharpen: Some(15.0),
+        hints: None,
+    };
+
+    let json = registry.node_to_json(&node);
+    let inner = json.get("constrain").unwrap();
+
+    // The JSON key should be "sharpen_percent" (json_name), not "sharpen" (field name)
+    assert!(inner.get("sharpen_percent").is_some());
+    assert!(inner.get("sharpen").is_none());
+    assert_eq!(inner.get("sharpen_percent").unwrap(), 15.0);
+}
+
+#[test]
+fn whole_node_to_json_embeds_nested_json() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+
+    let node = ImageflowConstrain {
+        w: Some(800),
+        h: None,
+        mode: String::from("fit"),
+        sharpen: None,
+        hints: Some(Hints {
+            down_filter: Some("lanczos".into()),
+            up_filter: None,
+            sharpen_percent: Some(10.0),
+        }),
+    };
+
+    let json = registry.node_to_json(&node);
+    let hints = json.get("constrain").unwrap().get("hints").unwrap();
+    assert_eq!(hints.get("down_filter").unwrap(), "lanczos");
+    assert_eq!(hints.get("sharpen_percent").unwrap(), 10.0);
+}
+
+#[test]
+fn deny_unknown_fields_rejects_unknown() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+
+    let json: serde_json::Value = serde_json::json!({
+        "constrain": {
+            "w": 800,
+            "unknown_field": "bad"
+        }
+    });
+
+    let result = registry.node_from_json(&json);
+    let err = result.err().expect("should be an error");
+    let err_str = err.to_string();
+    assert!(
+        err_str.contains("unknown_field"),
+        "error should mention the field: {err_str}"
+    );
+}
+
+#[test]
+fn without_deny_unknown_fields_ignores_unknown() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&JSON_NODE_NODE); // JSON_NODE_NODE does NOT have deny_unknown_fields
+
+    let json: serde_json::Value = serde_json::json!({
+        "test.json_node": {
+            "w": 400,
+            "extra_field": "ignored"
+        }
+    });
+
+    let node = registry.node_from_json(&json).unwrap();
+    assert_eq!(node.get_param("w"), Some(ParamValue::U32(400)));
+}
+
+#[test]
+fn whole_node_round_trip() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+
+    let original = ImageflowConstrain {
+        w: Some(1920),
+        h: Some(1080),
+        mode: String::from("fit_crop"),
+        sharpen: Some(15.0),
+        hints: Some(Hints {
+            down_filter: Some("lanczos".into()),
+            up_filter: Some("ginseng".into()),
+            sharpen_percent: None,
+        }),
+    };
+
+    // Serialize
+    let json = registry.node_to_json(&original);
+
+    // Deserialize
+    let restored_boxed = registry.node_from_json(&json).unwrap();
+    let restored = restored_boxed
+        .as_any()
+        .downcast_ref::<ImageflowConstrain>()
+        .unwrap();
+
+    assert_eq!(restored.w, Some(1920));
+    assert_eq!(restored.h, Some(1080));
+    assert_eq!(restored.mode, "fit_crop");
+    assert_eq!(restored.sharpen, Some(15.0));
+    assert_eq!(
+        restored.hints.as_ref().unwrap().down_filter.as_deref(),
+        Some("lanczos")
+    );
+}
+
+#[test]
+fn pipeline_from_json() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+    registry.register(&EXPOSURE_NODE);
+
+    let json: serde_json::Value = serde_json::json!([
+        {"constrain": {"w": 800, "mode": "fit"}},
+        {"test.exposure": {"stops": 1.5}}
+    ]);
+
+    let nodes = registry.pipeline_from_json(&json).unwrap();
+    assert_eq!(nodes.len(), 2);
+    assert_eq!(nodes[0].schema().id, "test.imageflow_constrain");
+    assert_eq!(nodes[1].schema().id, "test.exposure");
+    assert_eq!(nodes[0].get_param("w"), Some(ParamValue::U32(800)));
+    assert_eq!(nodes[1].get_param("stops"), Some(ParamValue::F32(1.5)));
+}
+
+#[test]
+fn pipeline_round_trip() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+    registry.register(&EXPOSURE_NODE);
+
+    let nodes: Vec<Box<dyn NodeInstance>> = vec![
+        Box::new(ImageflowConstrain {
+            w: Some(800),
+            h: None,
+            mode: String::from("fit"),
+            sharpen: None,
+            hints: None,
+        }),
+        Box::new(Exposure { stops: 1.5 }),
+    ];
+
+    let json = registry.pipeline_to_json(&nodes);
+    let restored = registry.pipeline_from_json(&json).unwrap();
+
+    assert_eq!(restored.len(), 2);
+    assert_eq!(restored[0].get_param("w"), Some(ParamValue::U32(800)));
+    assert_eq!(restored[1].get_param("stops"), Some(ParamValue::F32(1.5)));
+}
+
+#[test]
+fn node_from_json_null_means_none() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+
+    let json: serde_json::Value = serde_json::json!({
+        "constrain": {
+            "w": 800,
+            "sharpen_percent": null
+        }
+    });
+
+    let node = registry.node_from_json(&json).unwrap();
+    assert_eq!(node.get_param("sharpen"), Some(ParamValue::None));
+}
+
+#[test]
+fn node_from_json_missing_key_error() {
+    let mut registry = NodeRegistry::new();
+    registry.register(&IMAGEFLOW_CONSTRAIN_NODE);
+
+    let json: serde_json::Value = serde_json::json!({
+        "nonexistent": {"w": 800}
+    });
+
+    assert!(registry.node_from_json(&json).err().is_some());
+}
