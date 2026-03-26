@@ -60,7 +60,7 @@ pub mod json_schema;
 // Re-exports for convenience
 pub use error::NodeError;
 pub use format::{AlphaHandling, FormatHint, PixelFormatPreference};
-pub use kv::{KvPairs, KvWarning, KvWarningKind};
+pub use kv::{KvEntrySnapshot, KvPairs, KvWarning, KvWarningKind};
 pub use ordering::{CoalesceInfo, NodeRole};
 /// Backwards compatibility alias.
 pub type Phase = NodeRole;

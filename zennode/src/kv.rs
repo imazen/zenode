@@ -219,6 +219,32 @@ impl KvPairs {
             message: message.into(),
         });
     }
+
+    /// Snapshot all entries with their consumption state.
+    ///
+    /// Returns a snapshot of every key-value pair and which node (if any)
+    /// consumed it. Useful for tracing/debugging RIAPI parsing.
+    pub fn snapshot(&self) -> Vec<KvEntrySnapshot> {
+        self.entries
+            .iter()
+            .map(|e| KvEntrySnapshot {
+                key: e.key.clone(),
+                value: e.value.clone(),
+                consumed_by: e.consumed_by,
+            })
+            .collect()
+    }
+}
+
+/// A snapshot of a single key-value entry's consumption state.
+#[derive(Clone, Debug)]
+pub struct KvEntrySnapshot {
+    /// The key (lowercased).
+    pub key: String,
+    /// The value (percent-decoded).
+    pub value: String,
+    /// Which node schema consumed this key, or `None` if unconsumed.
+    pub consumed_by: Option<&'static str>,
 }
 
 /// Minimal percent-decoding for querystring values.
