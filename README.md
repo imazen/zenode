@@ -36,7 +36,7 @@ pub enum FitMode {
 
 ## What It Provides
 
-**Schema introspection.** Every node carries a `NodeSchema` with 13 fields (id, label, description, group, role, params, tags, coalesce info, format hints, version, compat_version, json_key, deny_unknown_fields). Every parameter carries a `ParamDesc` with 14 fields (name, label, description, kind, unit, section, slider mapping, kv_keys, since_version, visible_when, optional, json_name, json_aliases). Parameter types span 11 `ParamKind` variants: Float, Int, U32, Bool, Str, Enum, FloatArray, Color, Json, Object, and TaggedUnion.
+**Schema introspection.** Every node carries a `NodeSchema` with 13 fields (id, label, description, group, role, params, tags, coalesce info, format hints, version, compat_version, json_key, deny_unknown_fields). Every parameter carries a `ParamDesc` with 13 fields (name, label, description, kind, unit, section, slider mapping, kv_keys, since_version, visible_when, optional, json_name, json_aliases). Parameter types span 11 `ParamKind` variants: Float, Int, U32, Bool, Str, Enum, FloatArray, Color, Json, Object, and TaggedUnion.
 
 **Node registry.** `NodeRegistry` aggregates node definitions from across the ecosystem. Look up nodes by id, group, or tag. Create instances from parameter maps. Parse RIAPI querystrings against all registered nodes (with consumption tracking and warnings for unrecognized keys). Generate Markdown documentation for every registered node.
 
