@@ -5,7 +5,7 @@ use core::fmt;
 
 /// Errors from node creation, parameter access, and registry operations.
 #[non_exhaustive]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum NodeError {
     /// Unknown node ID.
     UnknownNode(String),
