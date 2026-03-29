@@ -15,8 +15,8 @@ use proc_macro::TokenStream;
 ///
 /// **Required:**
 /// - `#[node(id = "crate.name")]` — permanent fully-qualified identifier
-/// - `#[node(group = Tone)]` — [`NodeGroup`] variant
-/// - `#[node(phase = DisplayAdjust)]` — [`Phase`] variant
+/// - `#[node(group = Tone)]` — `NodeGroup` variant
+/// - `#[node(role = Filter)]` — `NodeRole` variant
 ///
 /// **Optional:**
 /// - `#[node(label = "...")]` — human label (default: struct name with spaces)
