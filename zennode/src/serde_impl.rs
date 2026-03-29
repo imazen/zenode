@@ -107,6 +107,8 @@ impl Serialize for NodeRole {
         serializer.serialize_str(match self {
             Self::Decode => "decode",
             Self::Geometry => "geometry",
+            Self::Orient => "orient",
+            Self::Resize => "resize",
             Self::Filter => "filter",
             Self::Composite => "composite",
             Self::Analysis => "analysis",
