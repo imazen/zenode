@@ -1,4 +1,4 @@
-# zennode ![CI](https://img.shields.io/github/actions/workflow/status/imazen/zennode/ci.yml?style=for-the-badge) ![MSRV](https://img.shields.io/badge/MSRV-1.85-blue?style=for-the-badge) ![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue?style=for-the-badge)
+# zennode [![CI](https://img.shields.io/github/actions/workflow/status/imazen/zennode/ci.yml?style=for-the-badge)](https://github.com/imazen/zennode/actions/workflows/ci.yml) [![MSRV](https://img.shields.io/badge/MSRV-1.85-blue?style=for-the-badge)](https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field) [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue?style=for-the-badge)](https://github.com/imazen/zennode#license)
 
 A self-describing node definition system for image processing pipelines.
 
