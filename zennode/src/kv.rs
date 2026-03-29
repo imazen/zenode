@@ -248,25 +248,46 @@ pub struct KvEntrySnapshot {
 }
 
 /// Minimal percent-decoding for querystring values.
+///
+/// Accumulates decoded bytes into a buffer and converts to a UTF-8 string
+/// at the end, correctly handling multi-byte UTF-8 sequences like `%C3%A9`.
+/// Invalid UTF-8 sequences are replaced via [`String::from_utf8_lossy`].
 fn percent_decode(s: &str) -> String {
-    let mut result = String::with_capacity(s.len());
-    let mut chars = s.bytes();
-    while let Some(b) = chars.next() {
+    let mut bytes = Vec::with_capacity(s.len());
+    let mut iter = s.bytes();
+    while let Some(b) = iter.next() {
         if b == b'+' {
-            result.push(' ');
+            bytes.push(b' ');
         } else if b == b'%' {
-            let hi = chars.next().and_then(from_hex);
-            let lo = chars.next().and_then(from_hex);
+            let hi = iter.next().and_then(from_hex);
+            let lo = iter.next().and_then(from_hex);
             if let (Some(h), Some(l)) = (hi, lo) {
-                result.push((h << 4 | l) as char);
+                bytes.push(h << 4 | l);
             } else {
-                result.push('%');
+                // Invalid hex after %: preserve the % and whatever bytes
+                // were consumed so the output doesn't silently lose data.
+                bytes.push(b'%');
+                if let Some(h_val) = hi {
+                    // First hex digit was valid but second wasn't — the
+                    // original byte was consumed from the iterator so
+                    // reconstruct it.
+                    bytes.push(unhex(h_val));
+                }
             }
         } else {
-            result.push(b as char);
+            bytes.push(b);
         }
     }
-    result
+    String::from_utf8(bytes).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
+}
+
+/// Reverse a nibble back to an ASCII hex digit (for error recovery).
+fn unhex(nibble: u8) -> u8 {
+    if nibble < 10 {
+        b'0' + nibble
+    } else {
+        b'a' + nibble - 10
+    }
 }
 
 fn from_hex(b: u8) -> Option<u8> {
@@ -327,6 +348,21 @@ mod tests {
         let mut kv = KvPairs::from_querystring("name=hello+world&path=%2Ffoo%2Fbar");
         assert_eq!(kv.take("name", "t"), Some("hello world"));
         assert_eq!(kv.take("path", "t"), Some("/foo/bar"));
+    }
+
+    #[test]
+    fn percent_decoding_multibyte_utf8() {
+        // %C3%A9 = é (U+00E9), a two-byte UTF-8 sequence
+        let mut kv = KvPairs::from_querystring("name=caf%C3%A9");
+        assert_eq!(kv.take("name", "t"), Some("café"));
+    }
+
+    #[test]
+    fn percent_decoding_invalid_hex_preserves_percent() {
+        // %ZZ is not valid hex — should preserve the % and following chars
+        let mut kv = KvPairs::from_querystring("x=%ZZ");
+        let val = kv.take("x", "t").unwrap();
+        assert!(val.contains('%'), "invalid hex should preserve %: {val}");
     }
 
     #[test]
