@@ -5,6 +5,9 @@ edition = "2024"
 rust-version = "1.85"
 license = "Apache-2.0 OR MIT"
 description = "Self-documenting node definitions for image processing pipelines"
+repository = "https://github.com/imazen/zennode"
+keywords = ["image", "pipeline", "node", "schema"]
+categories = ["multimedia::images"]
 
 [features]
 default = ["std", "derive"]

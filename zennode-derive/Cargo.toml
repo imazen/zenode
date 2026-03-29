@@ -5,11 +5,14 @@ edition = "2024"
 rust-version = "1.85"
 license = "Apache-2.0 OR MIT"
 description = "Derive macros for zennode node definitions"
+repository = "https://github.com/imazen/zennode"
+keywords = ["image", "pipeline", "node", "derive"]
+categories = ["multimedia::images"]
 
 [lib]
 proc-macro = true
 
 [dependencies]
-syn = { version = "2", features = ["full", "extra-traits"] }
-quote = "1"
-proc-macro2 = "1"
+syn = { version = "2.0.117", features = ["full", "extra-traits"] }
+quote = "1.0.45"
+proc-macro2 = "1.0.106"
