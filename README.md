@@ -21,6 +21,21 @@ pub struct Brightness {
 
 The `#[derive(Node)]` macro generates a `NodeDef` implementation (the factory/schema holder), a `NodeInstance` implementation (a live instance with parameter values), and a static singleton -- all from the struct definition. Doc comments on fields become parameter descriptions. The full `NodeSchema` is available at zero cost through `&'static` references.
 
+The generated static singleton is named `<STRUCT_NAME_IN_SCREAMING_SNAKE>_NODE` — e.g. `Brightness` produces `pub static BRIGHTNESS_NODE: BrightnessNodeDef`. Register it directly: `registry.register(&BRIGHTNESS_NODE)`.
+
+Each field's Rust type selects its `ParamKind`; `#[param(...)]` supplies the bounds and metadata:
+
+| Field type | `ParamKind` | typical `#[param]` keys |
+|---|---|---|
+| `f32` | `Float` | `range(min..=max)`, `default`, `identity`, `step` |
+| `i32` | `Int` | `range(min..=max)`, `default` |
+| `u32` | `U32` | `range(min..=max)`, `default` |
+| `bool` | `Bool` | `default` |
+| `[f32; N]` | `FloatArray` (or `Color` with `#[param(color)]`) | `default` |
+| an enum that derives `#[derive(NodeEnum)]` | `Enum` | `default` |
+
+Metadata keys allowed on any field: `unit`, `section`, `label`, `slider`. On the struct, `#[node(...)]` takes `id` (required), `group`, `role`, plus optional `alias` / `coalesce` / `deny_unknown_fields`.
+
 Parameter enums get their own derive:
 
 ```rust
@@ -78,8 +93,8 @@ Each sibling crate in the zen ecosystem follows the same pattern:
 3. That module defines node structs with `#[derive(Node)]` and provides a `register()` function:
    ```rust
    pub fn register(registry: &mut zennode::NodeRegistry) {
-       registry.register(&ENCODE_JPEG_DEF);
-       registry.register(&DECODE_JPEG_DEF);
+       registry.register(&ENCODE_JPEG_NODE);
+       registry.register(&DECODE_JPEG_NODE);
    }
    ```
 
