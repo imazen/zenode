@@ -1,6 +1,6 @@
 <!-- GENERATED FROM README.md by zenutils gen-readme-crates.sh — DO NOT EDIT. -->
 
-# zennode [![CI](https://img.shields.io/github/actions/workflow/status/imazen/zennode/ci.yml?style=flat-square&label=CI)](https://github.com/imazen/zennode/actions/workflows/ci.yml)
+# zennode
 
 zennode turns a plain Rust struct into a self-documenting pipeline node. Put `#[derive(Node)]` on a struct and you describe an operation's parameters *once* — ranges, defaults, units, slider mappings, UI sections, querystring keys, JSON field names, graph input ports — then get a zero-cost `&'static` schema, RIAPI-style querystring parsing, JSON (de)serialization, JSON Schema generation, and Markdown docs for free, all built for permanent backwards compatibility. zennode defines no nodes itself; nodes live in the crates that implement them. Pure Rust, `#![forbid(unsafe_code)]`, `no_std + alloc` (std optional).
 
