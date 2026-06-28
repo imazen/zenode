@@ -10,6 +10,7 @@
 
 ### Changed
 - Exclude `tests/`, `ENCODE-FULL.md`, `ENCODE-PATHS.md`, `SPEC.md` from published packages; add `.workongoing`/`.jj/` to `.gitignore`
+- Overhaul `README.md` (current-API quick start, registry + graph-topology/`inputs` docs, crosslink footer) and ship a generated crates.io-only `README.crates.md`; both crates' `readme` now points at it
 
 ## 0.1.0 — 2026-03-28
 
