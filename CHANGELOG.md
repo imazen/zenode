@@ -12,6 +12,7 @@
   `=off` skips); `justfile` recipes `api-doc` / `api-doc-check`
 
 ### Changed
+- `zennode-derive` now builds on `syn 3.0.4` (was `2.0.117`). Build-time only — `syn` never appears in the public surface of a proc-macro crate, so this is not a breaking change for consumers. It *removes* a duplicate `syn` from the dependency graph rather than adding one: `serde_derive 1.0.229` already requires `syn ^3`, so any consumer that enables `zennode/serde` was compiling both 2.x and 3.x. Verified by building the local `zennode-derive` against `zennode`'s derive tests through a temporary `[patch.crates-io]` (the workspace's `zennode-derive` dependency resolves from the registry, not by path, so the in-tree macro source is otherwise not exercised by `cargo test`): 51/51 tests pass.
 - Exclude `tests/`, `ENCODE-FULL.md`, `ENCODE-PATHS.md`, `SPEC.md` from published packages; add `.workongoing`/`.jj/` to `.gitignore`
 - Overhaul `README.md` (current-API quick start, registry + graph-topology/`inputs` docs, crosslink footer) and ship a generated crates.io-only `README.crates.md`; both crates' `readme` now points at it
 
