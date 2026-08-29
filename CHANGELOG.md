@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Dependency requirements refreshed to the current releases: `quote` 1.0.45 →
+  1.0.47 and `proc-macro2` 1.0.106 → 1.0.107 in `zennode-derive`; `serde`
+  1.0.228 → 1.0.229 and `serde_json` 1.0.149 → 1.0.151 in `zennode` (both the
+  optional dependency and the dev-dependency); `zenutils-apidoc` 0.1.0 → 0.1.1
+  in the workspace-excluded apidoc runner. `syn` was already on 3.0.4. Derive
+  output is exercised by `zennode/tests/derive_node.rs` and
+  `derive_enum.rs`; the suite is unchanged at 7 suites / 77 passed / 0 failed.
+
 ### Fixed
 - **Pushes to `main` now cancel their superseded CI runs.** `ci.yml` keyed its concurrency group on `${{ github.head_ref || github.run_id }}`. `github.head_ref` is populated only for `pull_request` events, so on a push it was empty and the group fell through to `github.run_id` — unique per run, so no two pushes ever shared a group and `cancel-in-progress` could never fire. Every push started a full matrix that ran to completion even when several commits landed seconds apart. Now keyed on `${{ github.ref }}`, which is set for both event types (`refs/heads/main` on push, `refs/pull/N/merge` on a PR), so PR cancellation is unchanged and consecutive pushes supersede each other.
 
